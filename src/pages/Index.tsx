@@ -9,8 +9,8 @@ import JsonViewer from "@/components/JsonViewer";
 import StoryNarrative from "@/components/StoryNarrative";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
-import FeedbackDialog from "@/components/FeedbackDialog";
-import FeedbackSection from "@/components/FeedbackSection";
+import FeedbackSidebar from "@/components/FeedbackSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import useFeedbackState from "@/hooks/useFeedbackState";
 import { ApiResponse, QueryResult, FeedbackType } from "@/types";
 
@@ -176,61 +176,58 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-8 px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Cricket Data Explorer
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Ask questions about cricket statistics in plain English
-          </p>
-        </div>
-
-        <div className="max-w-3xl mx-auto mb-10">
-          <QueryInput onSubmit={handleQuerySubmit} isLoading={isLoading} />
-        </div>
-
-        {isLoading ? (
-          <LoadingState />
-        ) : error ? (
-          <ErrorDisplay message={error} />
-        ) : queryResult ? (
-          <div className="space-y-8">
-            <ResultTable data={queryResult.table} />
-            <ResultDiagram imageUrl={queryResult.diagramUrl} />
-            <ResultExplanation
-              correctedQuery={queryResult.correctedQuery}
-              explanation={queryResult.queryExplanation}
-              singleLineExplanation={queryResult.singleLineExplanation}
-            />
-            <StoryNarrative story={queryResult.storyFromQuery} />
-            <JsonViewer data={queryResult.jsonObject} />
-            
-            {/* Feedback section */}
-            <div className="mt-12 max-w-2xl mx-auto">
-              <FeedbackSection 
-                onSubmitFeedback={handleSubmitFeedback}
-                isSubmitting={submittingFeedback}
-              />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-gray-50">
+        <div className="flex-1">
+          <div className="container mx-auto py-8 px-4">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Cricket Data Explorer
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Ask questions about cricket statistics in plain English
+              </p>
             </div>
+
+            <div className="max-w-3xl mx-auto mb-10">
+              <QueryInput onSubmit={handleQuerySubmit} isLoading={isLoading} />
+            </div>
+
+            {isLoading ? (
+              <LoadingState />
+            ) : error ? (
+              <ErrorDisplay message={error} />
+            ) : queryResult ? (
+              <div className="space-y-8">
+                <ResultTable data={queryResult.table} />
+                <ResultDiagram imageUrl={queryResult.diagramUrl} />
+                <ResultExplanation
+                  correctedQuery={queryResult.correctedQuery}
+                  explanation={queryResult.queryExplanation}
+                  singleLineExplanation={queryResult.singleLineExplanation}
+                />
+                <StoryNarrative story={queryResult.storyFromQuery} />
+                <JsonViewer data={queryResult.jsonObject} />
+              </div>
+            ) : (
+              <div className="text-center py-12 rounded-lg bg-cricket-light border-dashed border-2 border-[#10b981]/30">
+                <p className="font-medium text-[#10b981]">
+                  Enter a cricket related query to see results
+                </p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-12 rounded-lg bg-cricket-light border-dashed border-2 border-[#10b981]/30">
-            <p className="font-medium text-[#10b981]">
-              Enter a cricket related query to see results
-            </p>
-          </div>
+        </div>
+        
+        {/* Feedback Sidebar - only shown when feedback is required */}
+        {feedbackRequired && queryResult && (
+          <FeedbackSidebar 
+            onSubmitFeedback={handleSubmitFeedback}
+            isSubmitting={submittingFeedback}
+          />
         )}
       </div>
-      
-      {/* Feedback Dialog - Shows when feedback is required but trying to navigate away */}
-      <FeedbackDialog 
-        isOpen={feedbackRequired} 
-        onSubmitFeedback={handleSubmitFeedback}
-        isSubmitting={submittingFeedback}
-      />
-    </div>
+    </SidebarProvider>
   );
 };
 
