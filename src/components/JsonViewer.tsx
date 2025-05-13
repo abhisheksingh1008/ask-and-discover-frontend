@@ -15,7 +15,8 @@ const JsonViewer: React.FC<JsonViewerProps> = ({ data }) => {
 
   const jsonString = JSON.stringify(data, null, 2);
 
-  const copyToClipboard = () => {
+  const copyToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering collapsible
     navigator.clipboard.writeText(jsonString);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -24,25 +25,25 @@ const JsonViewer: React.FC<JsonViewerProps> = ({ data }) => {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">JSON Response</CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={copyToClipboard} 
-            className="h-8"
-          >
-            {copied ? <CopyCheck className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-        </div>
+        <CardTitle className="text-lg">JSON Response</CardTitle>
       </CardHeader>
       <CardContent>
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <Button variant="outline" size="sm" className="flex items-center justify-between w-full">
               <span>{isOpen ? "Hide JSON" : "Show JSON"}</span>
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={copyToClipboard} 
+                  className="h-8 mr-2"
+                >
+                  {copied ? <CopyCheck className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>

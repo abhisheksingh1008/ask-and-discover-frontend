@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface ResultDiagramProps {
   imageUrl: string;
@@ -13,18 +12,18 @@ const ResultDiagram: React.FC<ResultDiagramProps> = ({ imageUrl }) => {
   }
 
   return (
-    <Card>
+    <Card className="md:col-span-2">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">Visualization</CardTitle>
       </CardHeader>
       <CardContent>
-        <AspectRatio ratio={1 / 1} className="bg-gray-100 rounded-md overflow-hidden">
+        <div className="w-full bg-gray-100 rounded-md overflow-hidden">
           <img 
             src={imageUrl} 
-            alt="Data visualization" 
-            className="object-contain w-full h-full"
+            alt="Cricket data visualization" 
+            className="object-contain w-full"
           />
-        </AspectRatio>
+        </div>
       </CardContent>
     </Card>
   );

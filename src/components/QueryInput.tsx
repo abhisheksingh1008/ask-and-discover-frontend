@@ -22,14 +22,14 @@ const QueryInput: React.FC<QueryInputProps> = ({ onSubmit, isLoading }) => {
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-2">
       <label htmlFor="query" className="text-sm font-medium text-gray-700">
-        Ask any question about your data
+        Ask any question about cricket data
       </label>
       <div className="flex gap-2">
         <Input
           id="query"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="E.g., Show me total sales by region for last quarter"
+          placeholder="E.g., Which batsman scored the most centuries in 2023?"
           className="flex-1"
           disabled={isLoading}
         />
@@ -39,7 +39,7 @@ const QueryInput: React.FC<QueryInputProps> = ({ onSubmit, isLoading }) => {
         </Button>
       </div>
       <p className="text-xs text-gray-500">
-        Try natural language queries like "Which products have the highest sales?" or "Show customer retention by month"
+        Try questions like "Who are the top 5 wicket-takers in IPL history?" or "Show me Virat Kohli's batting average by year"
       </p>
     </form>
   );

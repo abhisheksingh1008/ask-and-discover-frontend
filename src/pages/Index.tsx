@@ -94,8 +94,8 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-8 px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Text-to-SQL Explorer</h1>
-          <p className="text-gray-600 mt-2">Ask questions about your data in plain English</p>
+          <h1 className="text-3xl font-bold text-gray-900">Cricket Data Explorer</h1>
+          <p className="text-gray-600 mt-2">Ask questions about cricket statistics in plain English</p>
         </div>
         
         <div className="max-w-3xl mx-auto mb-10">
@@ -125,7 +125,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-lg border">
-            <p className="text-gray-500">Enter a query to see results</p>
+            <p className="text-gray-500">Enter a cricket query to see results</p>
           </div>
         )}
       </div>
