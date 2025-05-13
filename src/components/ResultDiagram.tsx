@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,15 +11,15 @@ const ResultDiagram: React.FC<ResultDiagramProps> = ({ imageUrl }) => {
   }
 
   return (
-    <Card className="md:col-span-2">
+    <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">Visualization</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="w-full bg-gray-100 rounded-md overflow-hidden">
-          <img 
-            src={imageUrl} 
-            alt="Cricket data visualization" 
+          <img
+            src={imageUrl}
+            alt="Cricket data visualization"
             className="object-contain w-full"
           />
         </div>
