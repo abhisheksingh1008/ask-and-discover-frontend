@@ -148,13 +148,13 @@ const Index = () => {
               explanation={queryResult.queryExplanation}
               singleLineExplanation={queryResult.singleLineExplanation}
             />
-            <JsonViewer data={queryResult.jsonObject} />
             <StoryNarrative story={queryResult.storyFromQuery} />
+            <JsonViewer data={queryResult.jsonObject} />
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-lg border">
-            <p className="text-gray-500">
-              Enter a cricket query to see results
+          <div className="text-center py-12 rounded-lg bg-cricket-light border-dashed border-2 border-[#10b981]/30">
+            <p className="font-medium text-[#10b981]">
+              Enter a cricket related query to see results
             </p>
           </div>
         )}
