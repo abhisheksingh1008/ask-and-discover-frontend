@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Copy, CopyCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight, Copy } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface JsonViewerProps {
   data: any;
@@ -11,44 +12,48 @@ interface JsonViewerProps {
 
 const JsonViewer: React.FC<JsonViewerProps> = ({ data }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const jsonString = JSON.stringify(data, null, 2);
-
+  const { toast } = useToast();
+  
   const copyToClipboard = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering collapsible
-    navigator.clipboard.writeText(jsonString);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    e.stopPropagation(); // Prevent collapsible from toggling
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    toast({
+      description: "JSON copied to clipboard",
+      duration: 2000,
+    });
   };
-
+  
+  if (!data) {
+    return null;
+  }
+  
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">JSON Response</CardTitle>
+        <CardTitle className="text-lg">JSON Data</CardTitle>
       </CardHeader>
       <CardContent>
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
           <CollapsibleTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center justify-between w-full">
-              <span>{isOpen ? "Hide JSON" : "Show JSON"}</span>
-              <div className="flex items-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={copyToClipboard} 
-                  className="h-8 mr-2"
-                >
-                  {copied ? <CopyCheck className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
-                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            <div className="flex justify-between items-center w-full cursor-pointer p-3 border rounded-md">
+              <div className="flex items-center space-x-2">
+                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                <span>{isOpen ? "Hide" : "Show"} JSON</span>
               </div>
-            </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={copyToClipboard}
+                className="ml-auto"
+              >
+                <Copy className="h-4 w-4 mr-1" />
+                Copy
+              </Button>
+            </div>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-            <pre className="mt-2 p-4 bg-gray-50 rounded-md text-sm overflow-auto max-h-96">
-              {jsonString}
+          <CollapsibleContent className="mt-2">
+            <pre className="p-4 bg-gray-50 rounded-md overflow-x-auto text-xs max-h-80 scrollbar-thin">
+              {JSON.stringify(data, null, 2)}
             </pre>
           </CollapsibleContent>
         </Collapsible>

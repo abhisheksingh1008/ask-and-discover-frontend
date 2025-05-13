@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import QueryInput from "@/components/QueryInput";
 import ResultTable from "@/components/ResultTable";
@@ -8,15 +9,50 @@ import JsonViewer from "@/components/JsonViewer";
 import StoryNarrative from "@/components/StoryNarrative";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
-import { ApiResponse, QueryResult } from "@/types";
+import FeedbackDialog from "@/components/FeedbackDialog";
+import FeedbackSection from "@/components/FeedbackSection";
+import useFeedbackState from "@/hooks/useFeedbackState";
+import { ApiResponse, QueryResult, FeedbackType } from "@/types";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
   const { toast } = useToast();
+  const { 
+    feedbackRequired, 
+    submittingFeedback, 
+    markFeedbackRequired, 
+    submitFeedback 
+  } = useFeedbackState();
+
+  // Ensure feedback is collected when navigating away
+  useEffect(() => {
+    const handleBeforeNavigate = (e: BeforeUnloadEvent) => {
+      if (feedbackRequired) {
+        e.preventDefault();
+        e.returnValue = "You haven't submitted feedback yet. Please do so before leaving.";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeNavigate);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeNavigate);
+    };
+  }, [feedbackRequired]);
 
   const handleQuerySubmit = async (query: string) => {
+    // Check if feedback is required before allowing a new query
+    if (feedbackRequired) {
+      toast({
+        variant: "destructive",
+        title: "Feedback required",
+        description: "Please provide feedback on the previous response before submitting a new query",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -96,9 +132,13 @@ const Index = () => {
 
       if (mockResponse.success && mockResponse.data) {
         setQueryResult(mockResponse.data);
+        // Generate a unique ID for this query/response
+        const queryId = Date.now().toString();
+        // Mark feedback as required for this query
+        markFeedbackRequired(queryId);
         toast({
           title: "Query processed successfully",
-          description: "Your results are ready to view",
+          description: "Your results are ready to view. Please provide feedback when done.",
         });
       } else {
         throw new Error(mockResponse.error || "Failed to process query");
@@ -116,6 +156,22 @@ const Index = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmitFeedback = async (feedbackType: FeedbackType, comment: string) => {
+    const success = await submitFeedback(feedbackType, comment);
+    if (success) {
+      toast({
+        title: "Feedback submitted",
+        description: "Thank you for your feedback!",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Feedback submission failed",
+        description: "Please try again later.",
+      });
     }
   };
 
@@ -150,6 +206,14 @@ const Index = () => {
             />
             <StoryNarrative story={queryResult.storyFromQuery} />
             <JsonViewer data={queryResult.jsonObject} />
+            
+            {/* Feedback section */}
+            <div className="mt-12 max-w-2xl mx-auto">
+              <FeedbackSection 
+                onSubmitFeedback={handleSubmitFeedback}
+                isSubmitting={submittingFeedback}
+              />
+            </div>
           </div>
         ) : (
           <div className="text-center py-12 rounded-lg bg-cricket-light border-dashed border-2 border-[#10b981]/30">
@@ -159,6 +223,13 @@ const Index = () => {
           </div>
         )}
       </div>
+      
+      {/* Feedback Dialog - Shows when feedback is required but trying to navigate away */}
+      <FeedbackDialog 
+        isOpen={feedbackRequired} 
+        onSubmitFeedback={handleSubmitFeedback}
+        isSubmitting={submittingFeedback}
+      />
     </div>
   );
 };

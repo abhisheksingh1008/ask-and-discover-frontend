@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -20,7 +21,7 @@ const ResultDiagram: React.FC<ResultDiagramProps> = ({ imageUrl }) => {
           <img
             src={imageUrl}
             alt="Cricket data visualization"
-            className="object-contain w-full"
+            className="object-contain w-full h-auto"
           />
         </div>
       </CardContent>

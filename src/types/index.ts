@@ -19,3 +19,11 @@ export interface ApiResponse {
   data?: QueryResult;
   error?: string;
 }
+
+export type FeedbackType = "like" | "dislike" | null;
+
+export interface FeedbackData {
+  feedbackType: FeedbackType;
+  comment?: string;
+  queryId?: string;
+}
