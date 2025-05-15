@@ -1,7 +1,13 @@
-
 import React from "react";
 import { TableData } from "@/types";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ResultTableProps {
@@ -19,12 +25,15 @@ const ResultTable: React.FC<ResultTableProps> = ({ data }) => {
         <CardTitle className="text-lg">Query Results</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border overflow-auto max-h-80">
+        <div className="rounded-md border overflow-auto max-h-96">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-cricket-light">
               <TableRow>
                 {data.columns.map((column, index) => (
-                  <TableHead key={index} className="font-semibold">
+                  <TableHead
+                    key={index}
+                    className="font-semibold text-cricket-primary"
+                  >
                     {column}
                   </TableHead>
                 ))}

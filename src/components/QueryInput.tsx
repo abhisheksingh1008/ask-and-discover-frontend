@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Loader, Search } from "lucide-react";
 
 interface QueryInputProps {
   onSubmit: (query: string) => void;
@@ -37,8 +37,12 @@ const QueryInput: React.FC<QueryInputProps> = ({ onSubmit, isLoading }) => {
           disabled={isLoading || !query.trim()}
           className="bg-[#10b981] hover:bg-[#10b981]/90 cursor-pointer"
         >
-          <Search className="mr-2 h-4 w-4" />
-          Search
+          {isLoading ? (
+            <Loader className="animate-spin mr-2 h-4 w-4"></Loader>
+          ) : (
+            <Search className="mr-2 h-4 w-4" />
+          )}
+          {isLoading ? "Loading..." : "Search"}
         </Button>
       </div>
       <p className="text-xs text-gray-500">

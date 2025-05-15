@@ -1,26 +1,25 @@
-
 export interface TableData {
   columns: string[];
   rows: any[][];
 }
 
 export interface QueryResult {
-  table: TableData;
-  correctedQuery: string;
-  queryExplanation: string;
-  diagramUrl: string;
-  jsonObject: any;
-  singleLineExplanation: string;
-  storyFromQuery: string;
+  id: string;
+  Table: TableData;
+  "User's query": string;
+  "Perceived user's query": string;
+  "Explanation on how query was perceived": string;
+  Image: string;
+  "Restructured Data": string;
+  "Single Line Story": string;
+  Story: string;
 }
 
-export interface ApiResponse {
-  success: boolean;
-  data?: QueryResult;
-  error?: string;
+// export type FeedbackType = "THUMBS_UP" | "THUMBS_DOWN";
+export enum FeedbackType {
+  THUMBS_UP = "THUMBS_UP",
+  THUMBS_DOWN = "THUMBS_DOWN",
 }
-
-export type FeedbackType = "like" | "dislike" | null;
 
 export interface FeedbackData {
   feedbackType: FeedbackType;

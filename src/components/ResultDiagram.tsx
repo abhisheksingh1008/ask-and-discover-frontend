@@ -17,7 +17,7 @@ const ResultDiagram: React.FC<ResultDiagramProps> = ({ imageUrl }) => {
         <CardTitle className="text-lg">Visualization</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="w-full bg-gray-100 rounded-md overflow-hidden">
+        <div className="bg-gray-100 rounded-md overflow-hidden">
           <img
             src={imageUrl}
             alt="Cricket data visualization"

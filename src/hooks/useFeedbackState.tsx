@@ -1,25 +1,25 @@
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FeedbackType } from "@/types";
+import { useToast } from "./use-toast";
 
 interface FeedbackState {
-  lastQueryId: string | null;
+  queryResult: Record<string, any>;
   feedbackProvided: boolean;
 }
 
 export function useFeedbackState() {
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackRequired, setFeedbackRequired] = useState(false);
-  const [currentQueryId, setCurrentQueryId] = useState<string | null>(null);
+
+  const { toast } = useToast();
 
   // Load feedback state from localStorage on mount
   useEffect(() => {
     const savedState = localStorage.getItem("cricketExplorerFeedbackState");
     if (savedState) {
       const parsedState: FeedbackState = JSON.parse(savedState);
-      if (parsedState.lastQueryId && !parsedState.feedbackProvided) {
+      if (parsedState.queryResult && !parsedState.feedbackProvided) {
         setFeedbackRequired(true);
-        setCurrentQueryId(parsedState.lastQueryId);
       }
     }
   }, []);
@@ -29,7 +29,8 @@ export function useFeedbackState() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (feedbackRequired) {
         e.preventDefault();
-        e.returnValue = "You haven't provided feedback yet. Are you sure you want to leave?";
+        e.returnValue =
+          "You haven't provided feedback yet. Are you sure you want to leave?";
         return e.returnValue;
       }
     };
@@ -40,39 +41,54 @@ export function useFeedbackState() {
     };
   }, [feedbackRequired]);
 
-  const markFeedbackRequired = (queryId: string) => {
+  const markFeedbackRequired = (queryResult: Record<string, any>) => {
     setFeedbackRequired(true);
-    setCurrentQueryId(queryId);
-    
+
     // Save to localStorage
     const feedbackState: FeedbackState = {
-      lastQueryId: queryId,
-      feedbackProvided: false
+      queryResult,
+      feedbackProvided: false,
     };
-    localStorage.setItem("cricketExplorerFeedbackState", JSON.stringify(feedbackState));
+    localStorage.setItem(
+      "cricketExplorerFeedbackState",
+      JSON.stringify(feedbackState)
+    );
   };
 
-  const submitFeedback = async (feedbackType: FeedbackType, comment: string) => {
+  const submitFeedback = async (
+    data: Record<string, any>,
+    feedbackType: FeedbackType,
+    comment: string
+  ) => {
     setSubmittingFeedback(true);
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch("/api/feedback", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ feedbackType, comment, queryId: currentQueryId }),
-      // });
-      
-      // Mock API call with delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Feedback submitted:", { feedbackType, comment, queryId: currentQueryId });
-      
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}/feedback`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...data,
+            big_query_dump: {
+              ...data.big_query_dump,
+              is_feedback_given: true,
+              feedback: feedbackType,
+              additional_comments: comment,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok || response.status !== 200) {
+        return false;
+      }
+
       // Clear feedback requirement
       setFeedbackRequired(false);
-      
+
       // Clear from localStorage
       localStorage.removeItem("cricketExplorerFeedbackState");
-      
+
       return true;
     } catch (error) {
       console.error("Failed to submit feedback:", error);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import QueryInput from "@/components/QueryInput";
@@ -12,18 +11,21 @@ import ErrorDisplay from "@/components/ErrorDisplay";
 import FeedbackSidebar from "@/components/FeedbackSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import useFeedbackState from "@/hooks/useFeedbackState";
-import { ApiResponse, QueryResult, FeedbackType } from "@/types";
+import { QueryResult, FeedbackType } from "@/types";
+import { loadLastQueryResult, snakeToTitleCase } from "@/lib/helpers";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [queryResult, setQueryResult] = useState<QueryResult | null>(null);
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(
+    loadLastQueryResult
+  );
   const { toast } = useToast();
-  const { 
-    feedbackRequired, 
-    submittingFeedback, 
-    markFeedbackRequired, 
-    submitFeedback 
+  const {
+    feedbackRequired,
+    submittingFeedback,
+    markFeedbackRequired,
+    submitFeedback,
   } = useFeedbackState();
 
   // Ensure feedback is collected when navigating away
@@ -31,7 +33,8 @@ const Index = () => {
     const handleBeforeNavigate = (e: BeforeUnloadEvent) => {
       if (feedbackRequired) {
         e.preventDefault();
-        e.returnValue = "You haven't submitted feedback yet. Please do so before leaving.";
+        e.returnValue =
+          "You haven't submitted feedback yet. Please do so before leaving.";
         return e.returnValue;
       }
     };
@@ -48,101 +51,76 @@ const Index = () => {
       toast({
         variant: "destructive",
         title: "Feedback required",
-        description: "Please provide feedback on the previous response before submitting a new query",
+        description:
+          "Please provide feedback on the previous response before submitting a new query",
       });
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // This is a mock API call. In a real application, replace with your actual API endpoint
-      // const response = await fetch("/api/text-to-sql", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ query }),
-      // });
+      setIsLoading(true);
+      setQueryResult(null);
+      setError(null);
 
-      // const data: ApiResponse = await response.json();
-
-      // For demonstration purposes, we're using mock data
-      // In a real app, you would use the commented code above
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API delay
-
-      // Mock response
-      const mockResponse: ApiResponse = {
-        success: true,
-        data: {
-          table: {
-            columns: ["Region", "Category", "Sales", "Profit"],
-            rows: [
-              ["North", "Electronics", "$24,500", "$5,200"],
-              ["South", "Furniture", "$18,300", "$3,700"],
-              ["East", "Office Supplies", "$12,800", "$2,900"],
-              ["West", "Electronics", "$31,200", "$7,600"],
-            ],
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_API_URL}/text_to_sql`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "*/*",
+            "Content-Type": "application/json",
           },
-          correctedQuery:
-            "Show me sales and profit by region and product category",
-          queryExplanation:
-            "This query analyzes the sales and profit metrics across different regions and product categories to identify performance patterns and opportunities for growth.",
-          diagramUrl: "https://via.placeholder.com/500",
-          jsonObject: {
-            metadata: {
-              totalRecords: 4,
-              queriedTables: ["sales", "products", "regions"],
-            },
-            aggregates: { totalSales: "$86,800", totalProfit: "$19,400" },
-            results: [
-              {
-                region: "North",
-                category: "Electronics",
-                sales: "$24,500",
-                profit: "$5,200",
-              },
-              {
-                region: "South",
-                category: "Furniture",
-                sales: "$18,300",
-                profit: "$3,700",
-              },
-              {
-                region: "East",
-                category: "Office Supplies",
-                sales: "$12,800",
-                profit: "$2,900",
-              },
-              {
-                region: "West",
-                category: "Electronics",
-                sales: "$31,200",
-                profit: "$7,600",
-              },
-            ],
-          },
-          singleLineExplanation:
-            "The West region has the highest sales and profit, driven primarily by the Electronics category.",
-          storyFromQuery:
-            "The data reveals a compelling story about regional performance across product categories. The West region emerges as the clear leader in both sales and profit, with Electronics generating an impressive $31,200 in revenue and $7,600 in profit.\n\nInterestingly, while the North region also specializes in Electronics, its performance lags behind the West by approximately 21% in sales and 32% in profit, suggesting operational efficiency differences or market saturation variations between the regions.\n\nThe South region's focus on Furniture yields moderate results, while the East region shows the lowest overall performance with its Office Supplies category. This pattern suggests an opportunity to reevaluate product category focus by region or to investigate successful practices from the high-performing West region that might be transferable to other territories.",
-        },
-      };
-
-      if (mockResponse.success && mockResponse.data) {
-        setQueryResult(mockResponse.data);
-        // Generate a unique ID for this query/response
-        const queryId = Date.now().toString();
-        // Mark feedback as required for this query
-        markFeedbackRequired(queryId);
-        toast({
-          title: "Query processed successfully",
-          description: "Your results are ready to view. Please provide feedback when done.",
-        });
-      } else {
-        throw new Error(mockResponse.error || "Failed to process query");
+          body: JSON.stringify({
+            user_query: query,
+            model: "o3-mini",
+          }),
+        }
+      );
+      if (!response.ok || response.status !== 200) {
+        const error: any = await response.json();
+        // throw new Error(`${error?.detail || error?.message}`);
+        console.log(error);
       }
+      if (!response.body) {
+        throw new Error("No response body received");
+      }
+
+      const reader = response.body.getReader();
+      const dataRegex = /data:\s(.*)/g;
+      const decoder = new TextDecoder();
+      let accumulatedResult: Record<string, any> = {};
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        if (value) {
+          const chunk = decoder.decode(value);
+          let dataMatch: RegExpExecArray | null;
+
+          while ((dataMatch = dataRegex.exec(chunk)) !== null) {
+            const rawData = dataMatch[1];
+            const parsedObject = JSON.parse(rawData);
+
+            if (parsedObject) {
+              accumulatedResult = {
+                ...accumulatedResult,
+                ...parsedObject,
+              };
+              setQueryResult((prev) => ({
+                ...prev,
+                ...parsedObject,
+              }));
+            }
+          }
+        }
+      }
+      markFeedbackRequired(accumulatedResult);
+      toast({
+        title: "Query processed successfully",
+        description:
+          "Your results are ready to view. Please provide feedback when done.",
+      });
     } catch (err) {
       console.error("Query error:", err);
       setError(
@@ -159,8 +137,11 @@ const Index = () => {
     }
   };
 
-  const handleSubmitFeedback = async (feedbackType: FeedbackType, comment: string) => {
-    const success = await submitFeedback(feedbackType, comment);
+  const handleSubmitFeedback = async (
+    feedbackType: FeedbackType,
+    comment: string
+  ) => {
+    const success = await submitFeedback(queryResult, feedbackType, comment);
     if (success) {
       toast({
         title: "Feedback submitted",
@@ -193,21 +174,47 @@ const Index = () => {
               <QueryInput onSubmit={handleQuerySubmit} isLoading={isLoading} />
             </div>
 
-            {isLoading ? (
-              <LoadingState />
-            ) : error ? (
+            {error ? (
               <ErrorDisplay message={error} />
             ) : queryResult ? (
               <div className="space-y-8">
-                <ResultTable data={queryResult.table} />
-                <ResultDiagram imageUrl={queryResult.diagramUrl} />
+                {queryResult.Table && (
+                  <ResultTable
+                    data={{
+                      columns: queryResult.Table.columns.map((col) =>
+                        snakeToTitleCase(col)
+                      ),
+                      rows: Object.keys(
+                        queryResult.Table.rows[queryResult.Table.columns[0]]
+                      ).map((index) =>
+                        queryResult.Table.columns.map((col) =>
+                          String(queryResult.Table.rows[col][index])
+                        )
+                      ),
+                    }}
+                  />
+                )}
+                {queryResult.Image && (
+                  <ResultDiagram
+                    imageUrl={`${import.meta.env.VITE_BACKEND_API_URL}/${
+                      queryResult.Image
+                    }`}
+                  />
+                )}
                 <ResultExplanation
-                  correctedQuery={queryResult.correctedQuery}
-                  explanation={queryResult.queryExplanation}
-                  singleLineExplanation={queryResult.singleLineExplanation}
+                  enteredQuery={queryResult["User's query"]}
+                  perceivedQuery={queryResult["Perceived user's query"]}
+                  explanation={
+                    queryResult["Explanation on how query was perceived"]
+                  }
                 />
-                <StoryNarrative story={queryResult.storyFromQuery} />
-                <JsonViewer data={queryResult.jsonObject} />
+                {(queryResult["Single Line Story"] || queryResult.Story) && (
+                  <StoryNarrative
+                    singleLineStory={queryResult["Single Line Story"]}
+                    detailedStory={queryResult.Story}
+                  />
+                )}
+                <JsonViewer data={queryResult} />
               </div>
             ) : (
               <div className="text-center py-12 rounded-lg bg-cricket-light border-dashed border-2 border-[#10b981]/30">
@@ -218,10 +225,10 @@ const Index = () => {
             )}
           </div>
         </div>
-        
+
         {/* Feedback Sidebar - only shown when feedback is required */}
         {feedbackRequired && queryResult && (
-          <FeedbackSidebar 
+          <FeedbackSidebar
             onSubmitFeedback={handleSubmitFeedback}
             isSubmitting={submittingFeedback}
           />

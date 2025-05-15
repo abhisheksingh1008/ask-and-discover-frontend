@@ -29,6 +29,7 @@ export default {
           secondary: "#1A76D2", // Cricket blue
           accent: "#FFB300", // Cricket gold/yellow
           light: "#E8F5E9", // Light green background
+          "button-primary": "#10b981",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
