@@ -1,3 +1,4 @@
+
 export interface TableData {
   columns: string[];
   rows: any[][];
@@ -25,4 +26,10 @@ export interface FeedbackData {
   feedbackType: FeedbackType;
   comment?: string;
   queryId?: string;
+}
+
+export interface NavLink {
+  title: string;
+  path: string;
+  description: string;
 }
