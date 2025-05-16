@@ -12,7 +12,7 @@ const PlayerComparison = () => {
         <Button variant="ghost" asChild className="mb-4">
           <Link to="/" className="flex items-center">
             <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Query Explorer
+            Back to Home
           </Link>
         </Button>
         <h1 className="text-3xl font-bold">Cricket Player Comparison</h1>
